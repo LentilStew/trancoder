@@ -20,17 +20,39 @@ void filter_audio_hash_init(filters_path *filter_step)
     params->len = params->nb_samples * av_get_bytes_per_sample(params->fmt);
 
     params->random_nb = malloc(sizeof(uint8_t) * params->len);
-    float *random_nb = (float *)params->random_nb;
 
-    for (int i = 0; i < params->nb_samples; i++)
+    for (int i = 0; i < params->len; i++)
     {
+
         params->seed = next_lfsr(params->seed);
-        random_nb[i] = (float)(params->seed % 1000000) / 1000000.0;
-        /*        printf("the random number %f\n", (float)params->seed);
-                printf("the random number (the value that should be behind the comma) %ld\n", params->seed % 1000000);
-                printf("the value I get %f\n", random_nb[i]);
-                printf("the value I want %f\n", (float)(params->seed % 1000000) / 1000000.0);*/
-        // printf("%f\n", random_nb[i]);
+        printf("%i\n", (uint8_t)params->seed);
+        params->random_nb[i] = (uint8_t)params->seed;
+    }
+}
+
+void hash_frame_fltp(AVFrame *frame, filter_audio_hash *params)
+{
+    float **data = (float **)frame->data;
+    uint16_t *random_nb = (uint16_t *)params->random_nb;
+    for (int i = 0; i < frame->nb_samples; i++)
+    {
+        for (int ch = 0; ch < frame->channels; ch++)
+        {
+            int src_index = i;
+            if (params->reverse == 1)
+                src_index = frame->nb_samples - (i + 1);
+            
+            int dst_index = random_nb[src_index] % frame->nb_samples;
+
+            float tmp = data[ch][src_index];
+            data[ch][src_index] = data[ch][dst_index];
+            data[ch][dst_index] = tmp;
+
+            if (src_index < 5)
+            {
+                printf("data[ch][i] %f -> %f\n", data[ch][i], data[ch][dst_index]);
+            }
+        }
     }
 }
 
@@ -38,28 +60,13 @@ AVFrame *filter_audio_hash_apply(filters_path *filter_step, AVFrame *frame)
 {
 
     filter_audio_hash *params = filter_step->filter_params;
-
-    // int frame_len = frame->nb_samples * av_get_bytes_per_sample(params->fmt);
-
-    float **data = (float **)frame->data;
-    float *random_nb = (float *)params->random_nb;
-    for (int i = 0; i < frame->nb_samples; i++)
+    switch (frame->format)
     {
-        for (int ch = 0; ch < frame->channels; ch++)
-        {
-            float reandom_nb = fabsf(random_nb[i]);
-
-            if (params->reverse == 1)
-                reandom_nb = 1 / reandom_nb;
-            
-            data[ch][i] *= reandom_nb;
-            if (i < 5)
-            {
-
-                printf("%i) %f * %f", params->reverse, data[ch][i], reandom_nb);
-                printf(" = %f\n", data[ch][i]);
-            }
-        }
+    case AV_SAMPLE_FMT_FLTP:
+        hash_frame_fltp(frame, params);
+        break;
+    default:
+        break;
     }
 
     return frame;

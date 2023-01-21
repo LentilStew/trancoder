@@ -35,8 +35,8 @@ int main()
     // av_log_set_level(AV_LOG_DEBUG);
 
     // GLOBAL SETTINGS
+    char *output[] = {"./outputs/original.flv", "./outputs/hash2.flv", "./outputs/reverse_hash.flv"};
     int nb_output = 3;
-    char *output[] = {"./outputs/original.flv", "./outputs/hash.flv", "./outputs/reverse_hash.flv"};
     char *filetype = "flv";
 
     // AUDIO SETTINGS
@@ -82,7 +82,7 @@ int main()
         if (i != nb_output - 1)
         {
             paths = fp_append(paths,
-                              filter_audio_hash_create(seed, encoder[i]->streams[0]->codecpar->frame_size, channels, AV_SAMPLE_FMT_FLTP, i % 2));
+                              filter_audio_hash_create(seed, encoder[i]->streams[0]->codecpar->frame_size, channels, AV_SAMPLE_FMT_FLTP, 1));
         }
 
         filter_path_init(paths);
@@ -96,7 +96,7 @@ int main()
     fp_print(paths);
     int ret;
 
-    char *audio_input_path = "./video_inputs/song_yt.mkv";
+    char *audio_input_path = "./outputs/hash.flv";
 
     file *audio = file_open(audio_input_path);
     if (!audio)
