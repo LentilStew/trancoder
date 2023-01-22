@@ -341,7 +341,6 @@ int file_stream(file *dec, filters_path **extra_paths)
         else
             paths[s] = fp_copy(dec->paths[s]);
 
-        // I HATE THIS PART
         filters_path *frame_free = filter_path_create();
         frame_free->filter_frame = filter_frame_free;
         frame_free->is_init = 1;
@@ -354,14 +353,13 @@ int file_stream(file *dec, filters_path **extra_paths)
     frame_list *curr = dec->fl;
     while (1)
     {
-        frame = av_frame_alloc();
 
         int frame_index;
         int res;
-        printf("%p\n", curr);
         // instead of checking the last curr farme to be NULL, and try to decode the frames left in the decoder, should check the end of the linked list TODO
         if (!dec->fl)
         {
+            frame = av_frame_alloc();
             res = file_decode_frame(dec, frame, packet);
             frame_index = packet->stream_index;
         }
@@ -369,11 +367,17 @@ int file_stream(file *dec, filters_path **extra_paths)
         {
 
             res = 0;
-            frame = curr->frame;
             frame_index = file_find_media_type(curr->media_type, dec);
-            curr = curr->next;
+            
             if (frame_index == -1)
+            {
+                curr = curr->next;
                 continue;
+            }
+            
+            frame = frame_copy(curr->frame, curr->media_type);
+            curr = curr->next;
+
         }
         else
         {
@@ -395,7 +399,7 @@ int file_stream(file *dec, filters_path **extra_paths)
         }
     }
 
-    av_frame_free(&frame);
+    // av_frame_free(&frame);
     av_packet_free(&packet);
     filters_path *head = NULL;
     filters_path *tmp = NULL;

@@ -89,8 +89,11 @@ void *video_queue_run(void *_vq)
 
             file_stream(curr[0]->video, extra_filters);
 
-            return NULL;
             curr[0]->status = VIDEO_QUEUE_STATUS_DONE;
+            continue;
+            
+        case VIDEO_QUEUE_STATUS_END:
+            return NULL;
         }
     }
 }

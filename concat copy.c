@@ -13,7 +13,6 @@
 #include "filters/delay2.h"
 #include "filters/samples_per_frame.h"
 #include "filters/audio_hash.h"
-#include "filters/video_hash.h"
 
 #include <libavutil/time.h>
 #include "video_queue.h"
@@ -40,17 +39,15 @@ int main()
     int nb_output = 3;
     char *filetype = "flv";
 
-    // VIDEO SETTINGS
-    int width = 116;
-    int height = 116;
-    AVRational fps = (AVRational){25, 1};
-    int bitrate = 1000000;
-    int pixelFormat = AV_PIX_FMT_YUV420P;
-    AVRational sample_aspect_ratio = (AVRational){1, 1};
-    AVRational timebase = av_inv_q(fps);
-    char *videoencoder = "libx264";
-    AVDictionary *video_codec_options = NULL;
+    // AUDIO SETTINGS
+    int samplerate = 44100;
+    int sample_fmt = AV_SAMPLE_FMT_FLTP;
+    int channels = 2;
+    int audiobitrate = 128000;
+    char *audioencoder = "aac";
 
+    AVDictionary *audio_codec_options = NULL;
+    // filter hash settings
     int64_t seed = (int64_t)0xafafafafa;
     // filter hash settings
     file **encoder = malloc(sizeof(file *) * nb_output);
@@ -60,8 +57,8 @@ int main()
 
         encoder[i] = file_create(1, output[i], filetype);
         paths = fp_append(paths,
-                          filter_encode_video_create(&encoder[i]->codec[0], encoder[i]->container, &encoder[i]->streams[0], videoencoder,
-                                                     width, height, pixelFormat, sample_aspect_ratio, timebase, fps, bitrate, video_codec_options));
+                          filter_encode_audio_create(&encoder[i]->codec[0], encoder[i]->container, &encoder[i]->streams[0], audioencoder,
+                                                     sample_fmt, channels, samplerate, audiobitrate, audio_codec_options));
         filter_path_init(paths);
 
         // INITIALIZE OUTPUT
@@ -82,30 +79,24 @@ int main()
             printf("an error occurred when opening output file");
             exit(1);
         }
-
         if (i != nb_output - 1)
         {
             paths = fp_append(paths,
-                              filter_video_hash_create(seed, 1, 16, 16));
+                              filter_audio_hash_create(seed, encoder[i]->streams[0]->codecpar->frame_size, channels, AV_SAMPLE_FMT_FLTP, 1));
         }
 
         filter_path_init(paths);
     }
-    int64_t start_time = av_gettime();
-
     paths = fp_append(
-        fp_append(
-            filter_pts_create(encoder[0]->streams[0], encoder[0]->codec[0]->framerate),
-            filter_delay_create(start_time, encoder[0]->streams[0])),
+        filter_pts_create(encoder[0]->streams[0], (AVRational){1, samplerate}),
         paths);
-
     filter_path_init(paths);
     encoder[0]->paths[0] = paths;
 
     fp_print(paths);
     int ret;
 
-    char *audio_input_path = "./video_inputs/roach.mp4";
+    char *audio_input_path = "./outputs/hash.flv";
 
     file *audio = file_open(audio_input_path);
     if (!audio)
@@ -114,7 +105,7 @@ int main()
         exit(1);
     }
 
-    ret = file_open_codecs(audio, NULL, CODEC_SKIP);
+    ret = file_open_codecs(audio, CODEC_SKIP, NULL);
     if (ret == 1)
     {
         printf("Can't open codec for %s\n", audio_input_path);
@@ -122,7 +113,6 @@ int main()
     }
     audio->fl = file_to_frame_list(audio);
     filters_path_from_files(audio, encoder[0]);
-    audio->fl = frame_list_circular(audio->fl);
 
     video_queue *new_audio = video_queue_create();
     new_audio->video = audio;
@@ -142,7 +132,6 @@ int main()
     pthread_join(a_thread, NULL);
     for (int i = 0; i < nb_output; i++)
     {
-        fp_flush(encoder[i]->paths[0]);
         av_write_trailer(encoder[i]->container);
     }
 }

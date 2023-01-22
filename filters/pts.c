@@ -56,9 +56,8 @@ AVFrame *filter_pts(filters_path *filter_props, AVFrame *frame)
 
         frames_per_packet = frame->nb_samples;
     }
-    params->frame_duration = (double)(av_q2d(av_div_q((AVRational){time_base.den, 1}, fps))) * (double)frames_per_packet;
+    // params->frame_duration = (double)(av_q2d(av_div_q((AVRational){time_base.den, 1}, fps))) * (double)frames_per_packet;
     frame->pkt_duration = params->frame_duration;
-
     frame->pts = params->next_pts;
 
     params->next_pts = params->next_pts + params->frame_duration;

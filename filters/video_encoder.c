@@ -90,8 +90,7 @@ void filter_encode_video_uninit(filters_path *filter_props)
 
 AVFrame *filter_encode_video(filters_path *filter_props, AVFrame *frame)
 {
-    printf("ENCODING VIDEO\n");
-
+    printf("ENCODING FRAME\n");
     filter_video_encode_params *params = filter_props->filter_params;
     AVCodecContext *cod_ctx = *params->cod_ctx;
     AVStream *stream = *params->stream;
@@ -140,7 +139,7 @@ AVFrame *filter_encode_video(filters_path *filter_props, AVFrame *frame)
         params->packet->duration = (int64_t)params->frame_duration;
 */
         params->packets++;
-            //printf("ENCODING FRAME FR VIDEO\n");
+        // printf("ENCODING FRAME FR VIDEO\n");
 
         pthread_mutex_lock(&mutex);
         int res = av_interleaved_write_frame(params->container, params->packet);
