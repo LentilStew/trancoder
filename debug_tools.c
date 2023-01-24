@@ -53,7 +53,12 @@ AVFrame *frame_black_get(int width, int height, int pix_fmt)
 
     return frame;
 }
-
+uint64_t next_lfsr(int64_t lfsr)
+{
+    uint64_t bit = ((lfsr >> 63) ^ (lfsr >> 61) ^ (lfsr >> 60) ^ (lfsr >> 31)) & 1;
+    lfsr = (lfsr << 1) | bit;
+    return lfsr;
+}
 AVFrame *frame_copy(AVFrame *frame, enum AVMediaType type)
 {
     if (!frame)

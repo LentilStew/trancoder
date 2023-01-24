@@ -6,12 +6,7 @@
 #include <immintrin.h>
 #include "audio_hash.h"
 #include <float.h>
-uint64_t next_lfsr(int64_t lfsr)
-{
-    uint64_t bit = ((lfsr >> 63) ^ (lfsr >> 61) ^ (lfsr >> 60) ^ (lfsr >> 31)) & 1;
-    lfsr = (lfsr << 1) | bit;
-    return lfsr;
-}
+
 
 void filter_audio_hash_init(filters_path *filter_step)
 {

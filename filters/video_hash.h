@@ -7,14 +7,25 @@
 
 typedef struct video_hash
 {
-    uint8_t *random_numbers; // size of
-    int reverse;
     uint64_t seed;
 
+
+    int block_height;
+    int block_width;
     int first;
+
+
+    int real_heights[AV_NUM_DATA_POINTERS];
+    int nb_blocks_width;
+    int nb_blocks_height;
+    int nb_blocks;
+    int *block_swap;
+    uint8_t *block_modifier;
+
+    int reverse;
+
 } video_hash;
 
-void filter_video_hash_init(filters_path *filter_step);
 
 AVFrame *filter_video_hash(filters_path *filter_props, AVFrame *frame);
 

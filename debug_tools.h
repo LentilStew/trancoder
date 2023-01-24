@@ -29,4 +29,6 @@ void frame_list_print(frame_list *fl);
 
 AVFrame *frame_copy(AVFrame *frame, enum AVMediaType type);
 
+uint64_t next_lfsr(int64_t lfsr);
+
 #endif

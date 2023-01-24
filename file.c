@@ -29,10 +29,10 @@ file *file_create(int nb_streams, const char *filename, const char *format_name)
         return NULL;
     }
 
-    output->codec = calloc(nb_streams, sizeof(AVCodecContext *));
-    output->streams = calloc(nb_streams, sizeof(AVStream *));
+    output->codec = calloc((size_t)nb_streams, sizeof(AVCodecContext *));
+    output->streams = calloc((size_t)nb_streams, sizeof(AVStream *));
 
-    output->paths = calloc(nb_streams, sizeof(filters_path *));
+    output->paths = calloc((size_t)nb_streams, sizeof(filters_path *));
     output->frames = malloc(nb_streams * sizeof(int *));
 
     if (!output->codec || !output->paths || !output->frames)
@@ -58,13 +58,11 @@ void file_free(file *f)
     if (!f)
         return;
 
-    for (int i = 0; i < f->container->nb_streams; i++)
+    for (unsigned int i = 0; i < f->container->nb_streams; i++)
     {
         avcodec_free_context(&f->codec[i]);
 
-        printf("FREEING f->paths[%i] %p\n", i, f->paths[i]);
         filter_path_uninit(f->paths[i]);
-        printf("FREEING f->paths[%i] %p\n", i, f->paths[i]);
     }
 
     free(f->streams);
