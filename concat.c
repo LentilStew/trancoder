@@ -41,8 +41,8 @@ int main()
     char *filetype = "flv";
 
     // VIDEO SETTINGS
-    int width = 116;
-    int height = 116;
+    int width = 1920;
+    int height = 1080;
     AVRational fps = (AVRational){25, 1};
     int bitrate = 1000000;
     int pixelFormat = AV_PIX_FMT_YUV420P;
@@ -86,7 +86,7 @@ int main()
         if (i != nb_output - 1)
         {
             paths = fp_append(paths,
-                              filter_video_hash_create(seed, 1, 16, 16));
+                              filter_video_hash_create(seed, i % 2, 16, 16));
         }
 
         filter_path_init(paths);

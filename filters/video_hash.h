@@ -4,7 +4,17 @@
 #include "debug_tools.h" //DELETE
 #include "filter.h"
 #include <emmintrin.h>
+typedef struct block
+{
 
+    int real_heights;
+    int nb_blocks_width;
+    int nb_blocks_height;
+    int nb_blocks;
+    int *block_swap;
+    uint8_t *block_modifier;
+
+} block;
 typedef struct video_hash
 {
     uint64_t seed;
@@ -13,15 +23,7 @@ typedef struct video_hash
     int block_height;
     int block_width;
     int first;
-
-
-    int real_heights[AV_NUM_DATA_POINTERS];
-    int nb_blocks_width;
-    int nb_blocks_height;
-    int nb_blocks;
-    int *block_swap;
-    uint8_t *block_modifier;
-
+    block planes[AV_NUM_DATA_POINTERS];
     int reverse;
 
 } video_hash;
