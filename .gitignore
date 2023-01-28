@@ -55,7 +55,6 @@ dkms.conf
 *.mp4
 *.mp3
 *.out
-*.txt
 *.flv
 *.mkv
 *.out
