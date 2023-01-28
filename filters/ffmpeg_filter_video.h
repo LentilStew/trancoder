@@ -1,7 +1,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/buffersink.h>

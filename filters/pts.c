@@ -2,7 +2,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "pts.h"
 
 void filter_pts_init(filters_path *filter_step)

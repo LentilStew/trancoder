@@ -2,7 +2,8 @@
 #include <libavutil/channel_layout.h>
 #include <libavutil/samplefmt.h>
 #include <libswresample/swresample.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 
 typedef struct audio_resample_params
 {

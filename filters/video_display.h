@@ -10,7 +10,8 @@
 #include <libavutil/opt.h>
 
 #include "file.h"
-#include "filter.h"
+#include "filters/filter.h"
+
 
 typedef struct renderer
 {

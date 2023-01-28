@@ -2,7 +2,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <emmintrin.h>
 typedef struct block
 {
@@ -15,10 +16,10 @@ typedef struct block
     uint8_t *block_modifier;
 
 } block;
+
 typedef struct video_hash
 {
     uint64_t seed;
-
 
     int block_height;
     int block_width;
@@ -28,12 +29,9 @@ typedef struct video_hash
 
 } video_hash;
 
-
 AVFrame *filter_video_hash(filters_path *filter_props, AVFrame *frame);
 
 void filter_video_hash_destroy(filters_path *filter_props);
 
 // w_nb_blocks and h_nb_blocks can be 0
-filters_path *filter_video_hash_create(uint64_t seed, int reverse,
-                                       int w_nb_blocks,
-                                       int h_nb_blocks);
+filters_path *filter_video_hash_create(uint64_t seed, int reverse);

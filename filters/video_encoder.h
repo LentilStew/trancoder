@@ -1,6 +1,7 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include "filter.h"
+#include <pthread.h>
+#include "filters/filter.h"
 
 typedef struct filter_video_encode_params
 {
@@ -26,6 +27,7 @@ typedef struct filter_video_encode_params
     AVDictionary *codec_options;
     int delay;
     time_t start_time;
+    pthread_mutex_t *mutex;
 } filter_video_encode_params;
 
 void filter_encode_video_init(filters_path *filter_step);
@@ -45,4 +47,5 @@ filters_path *filter_encode_video_create(AVCodecContext **cod_ctx,
                                          AVRational time_base,
                                          AVRational framerate,
                                          int bit_rate,
-                                         AVDictionary *codec_options);
+                                         AVDictionary *codec_options,
+                                         pthread_mutex_t *mutex);

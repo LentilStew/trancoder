@@ -5,7 +5,8 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "video_display.h"
 
 void filter_display_video_init(filters_path *fp)

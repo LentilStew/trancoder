@@ -3,7 +3,8 @@
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
 #include <libswscale/swscale.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "swscale.h"
 
 void filter_sws_scale_init(filters_path *filter_step)

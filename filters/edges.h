@@ -1,6 +1,7 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 
 void filter_edges_init(filters_path *filter_step);
 

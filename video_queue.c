@@ -5,19 +5,20 @@
 #include <libavutil/avutil.h>
 #include "debug_tools.h"
 #include "file.h"
-#include "filter.h"
+#include "filters/filter.h"
 #include "video_queue.h"
 #include <libavutil/time.h>
-
+#include <pthread.h>
 video_queue *video_queue_create()
 {
 
-    video_queue *queue = malloc(sizeof(video_queue));
+    video_queue *queue = calloc(1, sizeof(video_queue));
     if (queue == NULL)
     {
         return NULL;
     }
     queue->next = NULL;
+    queue->video = NULL;
     queue->status = VIDEO_QUEUE_STATUS_UNDEFINED;
 
     return queue;
@@ -39,8 +40,8 @@ void video_queue_free(video_queue *vq)
 {
     if (!vq)
         return;
-
-    file_free(vq->video);
+    if (vq->video)
+        file_free(vq->video);
 
     video_queue_free(vq->next);
     free(vq);
@@ -91,7 +92,7 @@ void *video_queue_run(void *_vq)
 
             curr[0]->status = VIDEO_QUEUE_STATUS_DONE;
             continue;
-            
+
         case VIDEO_QUEUE_STATUS_END:
             return NULL;
         }

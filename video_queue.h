@@ -7,7 +7,7 @@
 #include <libavutil/pixdesc.h>
 #include <libavutil/avutil.h>
 #include "file.h"
-#include "filter.h"
+#include "filters/filter.h"
 #include "debug_tools.h"
 
 enum video_queue_status

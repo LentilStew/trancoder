@@ -1,5 +1,6 @@
 #include <libavformat/avformat.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 
 void filter_path_init(filters_path *path)
 {

@@ -3,7 +3,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <libavutil/time.h>
 #include <pthread.h>
 #include <libavutil/channel_layout.h>
@@ -117,14 +118,14 @@ AVFrame *filter_encode_audio(filters_path *filter_props, AVFrame *frame)
         params->packets++;
         */
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(params->mutex);
         int res = av_interleaved_write_frame(params->container, params->packet);
         if (res != 0)
         {
             printf("ERROR ENCODING AUDIO FRAME \"%s\"\n", av_err2str(res));
             exit(0);
         }
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(params->mutex);
     }
 
     return frame;
@@ -138,7 +139,8 @@ filters_path *filter_encode_audio_create(AVCodecContext **cod_ctx,
                                          int channels,
                                          int sample_rate,
                                          int bit_rate,
-                                         AVDictionary *codec_options)
+                                         AVDictionary *codec_options,
+                                         pthread_mutex_t *mutex)
 {
     filters_path *filter_step = filter_path_create();
     if (filter_step == NULL)
@@ -165,6 +167,7 @@ filters_path *filter_encode_audio_create(AVCodecContext **cod_ctx,
     params->packet = NULL;
     params->frame_duration = 0;
     params->codec_options = codec_options;
+    params->mutex = mutex;
     filter_step->filter_params = params;
     filter_step->init = filter_encode_audio_init;
     filter_step->uninit = filter_encode_audio_uninit;

@@ -1,4 +1,5 @@
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <time.h>
 #include "delay.h"
 AVFrame *filter_delay(filters_path *filter_props, AVFrame *frame)

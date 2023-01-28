@@ -2,7 +2,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <immintrin.h>
 
 typedef struct filter_audio_hash

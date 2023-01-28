@@ -2,7 +2,7 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
 
 typedef struct filter_samples_per_frame_params
 {

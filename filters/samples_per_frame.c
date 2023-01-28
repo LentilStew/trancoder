@@ -2,7 +2,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "samples_per_frame.h"
 
 void filter_samples_per_frame_init(filters_path *filter_step)

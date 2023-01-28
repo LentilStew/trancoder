@@ -3,7 +3,8 @@
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
 #include <libswscale/swscale.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 
 typedef struct swscale
 {

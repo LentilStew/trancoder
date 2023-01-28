@@ -1,6 +1,7 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "libavutil/imgutils.h"
 #include <malloc.h>  
 

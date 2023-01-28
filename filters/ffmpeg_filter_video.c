@@ -7,7 +7,8 @@
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
-#include "filter.h"
+#include "filters/filter.h"
+#include <string.h>
 #include "ffmpeg_filter_video.h"
 
 void filter_ffmpeg_video_init(filters_path *filter_step)

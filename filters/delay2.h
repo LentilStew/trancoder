@@ -1,4 +1,5 @@
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <time.h>
 #include <libavutil/time.h>
 

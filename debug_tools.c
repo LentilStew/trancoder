@@ -4,7 +4,8 @@
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
 #include <libavutil/avutil.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "debug_tools.h"
 #include <malloc.h>
 

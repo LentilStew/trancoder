@@ -8,7 +8,8 @@
 #include <libavfilter/buffersrc.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/opt.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <libavfilter/avfilter.h>
 
 typedef struct ffmpeg_filters_params_audio

@@ -4,12 +4,12 @@
 #include <libavutil/pixdesc.h>
 #include <libavutil/avutil.h>
 #include <pthread.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <string.h>
 #include "debug_tools.h"
 #include "file.h"
 
-pthread_mutex_t mutex;
 // only used for encoding files
 file *file_create(int nb_streams, const char *filename, const char *format_name)
 {
@@ -21,7 +21,7 @@ file *file_create(int nb_streams, const char *filename, const char *format_name)
     }
 
     output->nb_streams = nb_streams;
-
+    output->fl = NULL;
     res = avformat_alloc_output_context2(&output->container, NULL, format_name, filename);
     if (res < 0)
     {
@@ -50,6 +50,8 @@ file *file_create(int nb_streams, const char *filename, const char *format_name)
     }
 
     output->filename = strdup(filename);
+    output->mutex = malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(output->mutex, NULL);
     return output;
 }
 
@@ -69,6 +71,11 @@ void file_free(file *f)
     free(f->codec);
     free(f->paths);
     free(f->frames);
+    if (f->mutex)
+    {
+        pthread_mutex_destroy(f->mutex);
+        free(f->mutex);
+    }
     avformat_close_input(&f->container);
     free(f->filename);
     free(f);
@@ -78,7 +85,9 @@ void file_free(file *f)
 file *file_open(const char input_path[])
 {
     file *video = malloc(sizeof(file));
-
+    video->fl = NULL;
+    video->mutex = malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(video->mutex, NULL);
     video->container = avformat_alloc_context();
 
     if (!video->container)
@@ -304,7 +313,7 @@ int file_match_streams(file *f)
     return 0;
 }
 
-// returns a copy of the dst paths in the order of the src path
+// returns a copy of the dst paths in the order of the src path TODO FREE
 filters_path **file_match_paths(file *src, file *dst)
 {
     filters_path **out = calloc(sizeof(filters_path), src->nb_streams);
@@ -344,7 +353,7 @@ int file_stream(file *dec, filters_path **extra_paths)
         frame_free->is_init = 1;
         paths[s] = fp_append(paths[s], frame_free);
     }
-    AVFrame *frame;
+    AVFrame *frame = NULL;
 
     AVPacket *packet = av_packet_alloc();
 
@@ -366,16 +375,15 @@ int file_stream(file *dec, filters_path **extra_paths)
 
             res = 0;
             frame_index = file_find_media_type(curr->media_type, dec);
-            
+
             if (frame_index == -1)
             {
                 curr = curr->next;
                 continue;
             }
-            
+
             frame = frame_copy(curr->frame, curr->media_type);
             curr = curr->next;
-
         }
         else
         {
@@ -391,13 +399,13 @@ int file_stream(file *dec, filters_path **extra_paths)
             printf("Error decoding a frame\n");
             return 1;
         }
-        else if (res == -1)
+        else if (res == -1) // FILE ENDED
         {
+            av_frame_free(&frame);
             break;
         }
     }
 
-    // av_frame_free(&frame);
     av_packet_free(&packet);
     filters_path *head = NULL;
     filters_path *tmp = NULL;

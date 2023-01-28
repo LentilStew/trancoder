@@ -4,7 +4,8 @@
 #include <libavutil/imgutils.h>
 
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "video_hash.h"
 #include <emmintrin.h>
 #include <immintrin.h>
@@ -15,21 +16,18 @@ void filter_video_hash_init(filters_path *filter_props, AVFrame *frame)
     params->seed = (uint64_t)0x45354;
     params->block_height = 32;
     params->block_width = 32;
-    block planes[AV_NUM_DATA_POINTERS];
 
     switch (frame->format)
     {
 
     case AV_PIX_FMT_YUV420P:
-        planes[0].real_heights = frame->height;
-        planes[1].real_heights = frame->height / 2;
-        planes[2].real_heights = frame->height / 2;
+        params->planes[0].real_heights = frame->height;
+        params->planes[1].real_heights = frame->height / 2;
+        params->planes[2].real_heights = frame->height / 2;
         break;
     case AV_PIX_FMT_RGB24:
     case AV_PIX_FMT_BGR24:
-        planes[0].real_heights = frame->height;
-        planes[1].real_heights = frame->height;
-        planes[2].real_heights = frame->height;
+        params->planes[0].real_heights = frame->height;
         break;
     default:
         fprintf(stderr, "Unsupported pixel format %d %s %d", frame->format, __FILE__, __LINE__);
@@ -38,33 +36,32 @@ void filter_video_hash_init(filters_path *filter_props, AVFrame *frame)
 
     for (int z = 0; z < AV_NUM_DATA_POINTERS; z++)
     {
-        planes[z].nb_blocks_height = planes[z].real_heights / params->block_height;
-        planes[z].nb_blocks_width = frame->linesize[z] / params->block_width;
+        params->planes[z].nb_blocks_height = params->planes[z].real_heights / params->block_height;
+        params->planes[z].nb_blocks_width = frame->linesize[z] / params->block_width;
 
-        planes[z].nb_blocks = planes[z].nb_blocks_width * planes[z].nb_blocks_height;
-        planes[z].block_swap = malloc(sizeof(int) * planes[z].nb_blocks);
-        planes[z].block_modifier = malloc(sizeof(char) * planes[z].nb_blocks);
+        params->planes[z].nb_blocks = params->planes[z].nb_blocks_width * params->planes[z].nb_blocks_height;
+        params->planes[z].block_swap = malloc(sizeof(int) * params->planes[z].nb_blocks);
+        params->planes[z].block_modifier = malloc(sizeof(char) * params->planes[z].nb_blocks);
 
-        for (int i = 0; i < planes[z].nb_blocks; i++)
+        for (int i = 0; i < params->planes[z].nb_blocks; i++)
         {
-            planes[z].block_swap[i] = i;
+            params->planes[z].block_swap[i] = i;
         }
 
         // shuffle
-        for (int i = 0; i < planes[z].nb_blocks; i++)
+        for (int i = 0; i < params->planes[z].nb_blocks; i++)
         {
             params->seed = next_lfsr(params->seed);
-            int tmp = planes[z].block_swap[i];
-            planes[z].block_swap[i] = planes[z].block_swap[params->seed % planes[z].nb_blocks];
-            planes[z].block_swap[params->seed % planes[z].nb_blocks] = tmp;
+            int tmp = params->planes[z].block_swap[i];
+            params->planes[z].block_swap[i] = params->planes[z].block_swap[params->seed % params->planes[z].nb_blocks];
+            params->planes[z].block_swap[params->seed % params->planes[z].nb_blocks] = tmp;
         }
 
-        for (int i = 0; i < planes[z].nb_blocks; i++)
+        for (int i = 0; i < params->planes[z].nb_blocks; i++)
         {
             params->seed = next_lfsr(params->seed);
-            planes[z].block_modifier[i] = (uint8_t)params->seed;
+            params->planes[z].block_modifier[i] = (uint8_t)params->seed;
         }
-        params->planes[z] = planes[z];
     }
 
     return;
@@ -72,6 +69,8 @@ void filter_video_hash_init(filters_path *filter_props, AVFrame *frame)
 
 AVFrame *filter_video_hash(filters_path *filter_props, AVFrame *frame)
 {
+    if (!frame)
+        return NULL;
 
     video_hash *params = filter_props->filter_params;
     if (params->first == 0)
@@ -87,6 +86,7 @@ AVFrame *filter_video_hash(filters_path *filter_props, AVFrame *frame)
         if (frame->linesize[z] == 0)
             continue;
         block plane = params->planes[z];
+
         for (int block = 0; block < plane.nb_blocks_height * plane.nb_blocks_width; block += 2)
         {
             int src_block = plane.block_swap[block];
@@ -131,12 +131,21 @@ AVFrame *filter_video_hash(filters_path *filter_props, AVFrame *frame)
     return frame;
 }
 
-void filter_video_hash_destroy(filters_path *filter_props) {}
+void filter_video_hash_destroy(filters_path *filter_props)
+{
+    video_hash *params = filter_props->filter_params;
+    for (int i = 0; i < AV_NUM_DATA_POINTERS; i++)
+    {
+        if (params->planes[i].block_swap != NULL)
+            free(params->planes[i].block_swap);
+        if (params->planes[i].block_modifier != NULL)
+            free(params->planes[i].block_modifier);
+    }
+    free(params);
+}
 
 // w_nb_blocks and h_nb_blocks can be 0
-filters_path *filter_video_hash_create(uint64_t seed, int reverse,
-                                       int w_nb_blocks,
-                                       int h_nb_blocks)
+filters_path *filter_video_hash_create(uint64_t seed, int reverse)
 {
     filters_path *filter_step = filter_path_create();
     filter_step->init = NULL;
@@ -146,7 +155,7 @@ filters_path *filter_video_hash_create(uint64_t seed, int reverse,
     filter_step->filter_name = "video_hash";
     filter_step->is_init = 1;
 
-    video_hash *filter_params = malloc(sizeof(video_hash));
+    video_hash *filter_params = calloc(sizeof(video_hash), 1);
 
     filter_params->first = 0;
     filter_params->reverse = reverse;

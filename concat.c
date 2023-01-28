@@ -1,7 +1,7 @@
 // From array of paths to videos, transcode them to RTMP server
 #include "debug_tools.h"
 #include "file.h"
-#include "filter.h"
+#include "filters/filter.h"
 
 #include "filters/video_display.h"
 #include "filters/video_encoder.h"
@@ -32,11 +32,10 @@ int main()
 
     /* -------------------------- CREATE ENCODER -------------------------- */
 
-    pthread_mutex_init(&mutex, NULL);
     // av_log_set_level(AV_LOG_DEBUG);
 
     // GLOBAL SETTINGS
-    char *output[] = {"./outputs/original.flv", "./outputs/hash2.flv", "./outputs/reverse_hash.flv"};
+    char *output[] = {"./outputs/original.flv", "./outputs/hash.flv", "./outputs/reverse_hash.flv"};
     int nb_output = 3;
     char *filetype = "flv";
 
@@ -61,7 +60,7 @@ int main()
         encoder[i] = file_create(1, output[i], filetype);
         paths = fp_append(paths,
                           filter_encode_video_create(&encoder[i]->codec[0], encoder[i]->container, &encoder[i]->streams[0], videoencoder,
-                                                     width, height, pixelFormat, sample_aspect_ratio, timebase, fps, bitrate, video_codec_options));
+                                                     width, height, pixelFormat, sample_aspect_ratio, timebase, fps, bitrate, video_codec_options, encoder[i]->mutex));
         filter_path_init(paths);
 
         // INITIALIZE OUTPUT
@@ -86,7 +85,7 @@ int main()
         if (i != nb_output - 1)
         {
             paths = fp_append(paths,
-                              filter_video_hash_create(seed, i % 2, 16, 16));
+                              filter_video_hash_create(seed, i % 2));
         }
 
         filter_path_init(paths);
@@ -120,14 +119,15 @@ int main()
         printf("Can't open codec for %s\n", audio_input_path);
         exit(1);
     }
-    audio->fl = file_to_frame_list(audio);
+    // audio->fl = file_to_frame_list(audio);
     filters_path_from_files(audio, encoder[0]);
-    audio->fl = frame_list_circular(audio->fl);
+    // audio->fl = frame_list_circular(audio->fl);
 
     video_queue *new_audio = video_queue_create();
     new_audio->video = audio;
     new_audio->status = VIDEO_QUEUE_STATUS_WAITING;
-
+    new_audio->next = video_queue_create();
+    new_audio->next->status = VIDEO_QUEUE_STATUS_END;
     vq_run *audio_q = calloc(sizeof(vq_run), 1);
     audio_q->extra_filters = file_match_paths(audio, encoder[0]);
 
@@ -144,7 +144,11 @@ int main()
     {
         fp_flush(encoder[i]->paths[0]);
         av_write_trailer(encoder[i]->container);
+        file_free(encoder[i]);
     }
+
+    video_queue_free(new_audio);
+    free(audio_q);
 }
 
 int filters_path_from_files(file *src, file *dst)

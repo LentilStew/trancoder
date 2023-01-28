@@ -1,6 +1,7 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "file.h"
 
 #include <time.h>
@@ -22,6 +23,7 @@ typedef struct filter_audio_encode_params
     AVDictionary *codec_options;
     int delay;
     time_t start_time;
+    pthread_mutex_t *mutex;
 } filter_audio_encode_params;
 
 void filter_encode_audio_init(filters_path *filter_step);
@@ -38,4 +40,5 @@ filters_path *filter_encode_audio_create(AVCodecContext **cod_ctx,
                                          int channels,
                                          int sample_rate,
                                          int bit_rate,
-                                         AVDictionary *codec_options);
+                                         AVDictionary *codec_options,
+                                         pthread_mutex_t* mutex);

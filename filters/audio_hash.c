@@ -2,11 +2,11 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include <immintrin.h>
 #include "audio_hash.h"
 #include <float.h>
-
 
 void filter_audio_hash_init(filters_path *filter_step)
 {
@@ -20,7 +20,6 @@ void filter_audio_hash_init(filters_path *filter_step)
     {
 
         params->seed = next_lfsr(params->seed);
-        printf("%i\n", (uint8_t)params->seed);
         params->random_nb[i] = (uint8_t)params->seed;
     }
 }
@@ -36,7 +35,7 @@ void hash_frame_fltp(AVFrame *frame, filter_audio_hash *params)
             int src_index = i;
             if (params->reverse == 1)
                 src_index = frame->nb_samples - (i + 1);
-            
+
             int dst_index = random_nb[src_index] % frame->nb_samples;
 
             float tmp = data[ch][src_index];
@@ -91,7 +90,7 @@ filters_path *filter_audio_hash_create(int64_t seed,
     else
         filter_step->filter_name = "audio hash";
 
-    filter_audio_hash *filter_params = malloc(sizeof(filter_audio_hash));
+    filter_audio_hash *filter_params = calloc(1, sizeof(filter_audio_hash));
     filter_params->reverse = reverse;
     filter_params->seed = seed;
     filter_params->nb_samples = nb_samples;

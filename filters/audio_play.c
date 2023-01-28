@@ -6,7 +6,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 #include "debug_tools.h" //DELETE
-#include "filter.h"
+#include "filters/filter.h"
+
 #include "video_display.h"
 void filter_display_video_init(filters_path *fp)
 {

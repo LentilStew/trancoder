@@ -1,12 +1,12 @@
 #ifndef FILE22_H_
 #define FILE22_H_
-
-#include <libavcodec/avcodec.h>
+#include <pthread.h>
+ #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
 #include <libavutil/avutil.h>
-#include "filter.h"
+#include "filters/filter.h"
 #include "debug_tools.h"
 
 typedef struct file
@@ -19,9 +19,9 @@ typedef struct file
     int *frames;
     int nb_streams;
     char *filename;
-} file;
 
-extern pthread_mutex_t mutex;
+    pthread_mutex_t *mutex;
+} file;
 
 file *file_create(int nb_streams, const char *filename, const char *format_name);
 
